@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Showroom — RuView</title>
+  <link rel="stylesheet" href="/showroom.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="mark">π</span>
+      <div>
+        <strong>Showroom</strong>
+        <small>Live floor from two WiFi boards</small>
+      </div>
+    </div>
+    <nav>
+      <button type="button" id="tab-live" class="tab is-on" data-mode="live">Live</button>
+      <button type="button" id="tab-setup" class="tab" data-mode="setup">Room</button>
+      <button type="button" id="tab-cal" class="tab" data-mode="calibrate">Calibrate</button>
+    </nav>
+    <div id="badge" class="badge">Connecting</div>
+  </header>
+
+  <main>
+    <section class="stage">
+      <canvas id="floor" aria-label="Showroom floor plan"></canvas>
+      <p id="hint"></p>
+    </section>
+    <aside>
+      <section class="card" id="live-card">
+        <h2>Right now</h2>
+        <dl>
+          <div><dt>Place</dt><dd id="place">—</dd></div>
+          <div><dt>Motion</dt><dd id="motion">—</dd></div>
+          <div><dt>Fix</dt><dd id="fix">—</dd></div>
+        </dl>
+        <p id="note"></p>
+        <label class="check"><input type="checkbox" id="heat-toggle" checked> Show where time was spent</label>
+      </section>
+
+      <section class="card">
+        <div class="row">
+          <h2>Zones</h2>
+          <button type="button" id="reset-counts" class="ghost">Reset counts</button>
+        </div>
+        <ul id="shelf-stats"></ul>
+        <p id="route" class="help"></p>
+      </section>
+
+      <section class="card">
+        <h2>Boards</h2>
+        <ul id="node-list"></ul>
+      </section>
+
+      <section class="card" id="setup-card" hidden>
+        <h2>Room</h2>
+        <label>Width (m) <input id="room-w" type="number" min="1" max="40" step="0.1"></label>
+        <label>Depth (m) <input id="room-d" type="number" min="1" max="40" step="0.1"></label>
+        <p class="help">Sensor 1 is the first board. Sensor 2 is the second. Click the floor to drop the selected board. Place router, then click outside the floor if the router is outside the room. Draw a zone for the area in front of each shelf.</p>
+        <label>Place board
+          <select id="sensor-pick"></select>
+        </label>
+        <div class="row">
+          <button type="button" id="place-router">Place router</button>
+          <button type="button" id="draw-shelf">Draw a shelf</button>
+        </div>
+        <label>Zone type
+          <select id="zone-kind">
+            <option value="shelf">In front of a shelf</option>
+            <option value="walkway">Walkway</option>
+          </select>
+        </label>
+        <button type="button" id="draw-zone">Draw a zone</button>
+        <div id="new-shelf" hidden>
+          <label>Shelf name <input id="shelf-name" maxlength="40" placeholder="Window display"></label>
+          <div class="row">
+            <button type="button" id="shelf-add">Add shelf</button>
+            <button type="button" id="shelf-cancel" class="ghost">Cancel</button>
+          </div>
+        </div>
+        <ul id="shelf-edit"></ul>
+        <ul id="zone-edit"></ul>
+      </section>
+
+      <section class="card" id="cal-card" hidden>
+        <h2>Teach the zones</h2>
+        <p class="help">Press Record next to Shelf 1 or Shelf 2, walk there during the 15 second countdown, then move around in front of that shelf for 60 seconds. Do that for every shelf in session A, then again in session B. Record empty only when nobody is in the room.</p>
+        <div class="row">
+          <button type="button" id="session-a" class="is-on">Session A</button>
+          <button type="button" id="session-b" class="ghost">Session B</button>
+        </div>
+        <ul id="teach-list"></ul>
+        <p id="capture-status"></p>
+        <h2>Held-out check</h2>
+        <p id="eval-note" class="help"></p>
+        <ul id="eval-list"></ul>
+        <button type="button" id="run-eval" class="ghost">Check accuracy</button>
+      </section>
+
+      <p id="error" class="error" hidden></p>
+    </aside>
+  </main>
+  <script src="/showroom.js"></script>
+</body>
+</html>

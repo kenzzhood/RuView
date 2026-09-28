@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RuView Observatory — WiFi DensePose</title>
-  <link rel="stylesheet" href="observatory/css/observatory.css">
+  <link rel="stylesheet" href="observatory/css/observatory.css?v=room4">
 </head>
 <body>
   <canvas id="observatory-canvas"></canvas>
@@ -84,7 +84,7 @@
         <span class="signal-value" id="rssi-value">-- dBm</span>
       </div>
       <div class="signal-row">
-        <span class="signal-label">Variance</span>
+        <span class="signal-label" id="var-label">Variance</span>
         <span class="signal-value" id="var-value">--</span>
       </div>
       <div class="signal-row">
@@ -107,6 +107,16 @@
 
     <!-- Edge module badges (populated dynamically by HudController) -->
     <div id="edge-modules-bar"></div>
+
+    <div id="room-map" hidden>
+      <div id="room-map-title">Room</div>
+      <div id="room-map-floor">
+        <span class="room-sensor" id="room-sensor-1">1</span>
+        <span class="room-sensor" id="room-sensor-2">2</span>
+        <span id="room-map-person" hidden></span>
+      </div>
+      <div id="room-map-ends"><span>Sensor 1 · first board</span><span>Sensor 2 · second board</span></div>
+    </div>
 
     <!-- Bottom bar: capabilities -->
     <div id="capabilities-bar">
@@ -335,6 +345,6 @@
   }
   </script>
 
-  <script type="module" src="observatory/js/main.js"></script>
+  <script type="module" src="observatory/js/main.js?v=room4"></script>
 </body>
 </html>

@@ -18,7 +18,8 @@ import { PostProcessing } from './post-processing.js';
 import { FigurePool, SKELETON_PAIRS } from './figure-pool.js';
 import { PoseSystem } from './pose-system.js';
 import { ScenarioProps } from './scenario-props.js';
-import { HudController, DEFAULTS, SETTINGS_VERSION, PRESETS, SCENARIO_NAMES } from './hud-controller.js';
+import { HudController, DEFAULTS, SETTINGS_VERSION, PRESETS, SCENARIO_NAMES } from './hud-controller.js?v=room4';
+import { RoomTracker } from './room-track.js?v=room4';
 
 // ---- Palette ----
 const C = {
@@ -92,6 +93,7 @@ class Observatory {
 
     // Data
     this._demoData = new DemoDataGenerator();
+    this._roomTracker = new RoomTracker();
     this._demoData.setCycleDuration(this.settings.cycle || 30);
     if (this.settings.scenario && this.settings.scenario !== 'auto') {
       this._demoData.setScenario(this.settings.scenario);
@@ -515,12 +517,27 @@ class Observatory {
     } else {
       this._currentData = this._demoData.update(dt);
     }
-    const data = this._currentData;
+    let data = this._currentData;
+    const roomView = data?.node_features ? this._roomTracker.apply(data) : null;
+    if (roomView) {
+      data = {
+        ...data,
+        persons: roomView.persons,
+        estimated_persons: roomView.estimated_persons,
+        room_view: roomView,
+        classification: {
+          ...(data.classification || {}),
+          presence: roomView.present,
+          motion_level: !roomView.present ? 'absent' : roomView.walking ? 'active' : 'present_still',
+        },
+      };
+      this._currentData = data;
+    }
 
     // Updates
     this._nebula.update(dt, elapsed);
     this._figurePool.update(data, elapsed);
-    this._scenarioProps.update(data, this._demoData.currentScenario);
+    this._scenarioProps.update(data, roomView ? 'empty_room' : this._demoData.currentScenario);
     this._updateDotMatrixMist(data, elapsed);
     this._updateParticleTrail(data, dt, elapsed);
     this._updateWifiWaves(elapsed);

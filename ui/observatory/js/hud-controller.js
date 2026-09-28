@@ -379,10 +379,14 @@ export class HudController {
     const feat = data.features || {};
     const cls = data.classification || {};
 
-    // Sync scenario dropdown
-    const quickSel = document.getElementById('scenario-quick-select');
-    const cur = demoData._autoMode ? 'auto' : demoData.currentScenario;
-    if (quickSel && quickSel.value !== cur) quickSel.value = cur;
+    const room = data.room_view;
+    const scenarioArea = document.getElementById('scenario-area');
+    if (scenarioArea) scenarioArea.style.display = room ? 'none' : '';
+    if (!room) {
+      const quickSel = document.getElementById('scenario-quick-select');
+      const cur = demoData._autoMode ? 'auto' : demoData.currentScenario;
+      if (quickSel && quickSel.value !== cur) quickSel.value = cur;
+    }
     const autoIcon = document.getElementById('autoplay-icon');
     if (autoIcon) autoIcon.className = demoData._autoMode ? '' : 'hidden';
 
@@ -417,9 +421,22 @@ export class HudController {
     this._setBarColor('br-bar', vitalColor('br', this._lerpBr));
     this._setBarColor('conf-bar', vitalColor('conf', this._lerpConf));
 
-    this._setText('rssi-value', `${Math.round(feat.mean_rssi || 0)} dBm`);
-    this._setText('var-value', (feat.variance || 0).toFixed(2));
-    this._setText('motion-value', (feat.motion_band_power || 0).toFixed(3));
+    const varLabel = document.getElementById('var-label');
+    const roomMap = document.getElementById('room-map');
+    if (room) {
+      this._setText('rssi-value', `${Math.round(room.rssi)} dBm`);
+      this._setText('var-value', room.placeText);
+      this._setText('motion-value', room.motionText);
+      if (varLabel) varLabel.textContent = 'Place';
+      if (roomMap) roomMap.hidden = false;
+      this._paintRoomMap(room);
+    } else {
+      this._setText('rssi-value', `${Math.round(feat.mean_rssi || 0)} dBm`);
+      this._setText('var-value', (feat.variance || 0).toFixed(2));
+      this._setText('motion-value', (feat.motion_band_power || 0).toFixed(3));
+      if (varLabel) varLabel.textContent = 'Variance';
+      if (roomMap) roomMap.hidden = true;
+    }
 
     // Mini person-count dots
     const personCount = data.estimated_persons || 0;
@@ -428,15 +445,38 @@ export class HudController {
     const presEl = document.getElementById('presence-indicator');
     const presLabel = document.getElementById('presence-label');
     if (presEl) {
-      const ml = cls.motion_level || 'absent';
       presEl.className = 'presence-state';
-      if (ml === 'active') { presEl.classList.add('presence--active'); presLabel.textContent = 'ACTIVE'; }
-      else if (cls.presence) { presEl.classList.add('presence--present'); presLabel.textContent = 'PRESENT'; }
-      else { presEl.classList.add('presence--absent'); presLabel.textContent = 'ABSENT'; }
+      if (room) {
+        if (!room.present) {
+          presEl.classList.add('presence--absent');
+          presLabel.textContent = 'EMPTY';
+        } else if (room.walking) {
+          presEl.classList.add('presence--active');
+          presLabel.textContent = 'WALKING';
+        } else {
+          presEl.classList.add('presence--present');
+          presLabel.textContent = 'STANDING';
+        }
+      } else {
+        const ml = cls.motion_level || 'absent';
+        if (ml === 'active') { presEl.classList.add('presence--active'); presLabel.textContent = 'ACTIVE'; }
+        else if (cls.presence) { presEl.classList.add('presence--present'); presLabel.textContent = 'PRESENT'; }
+        else { presEl.classList.add('presence--absent'); presLabel.textContent = 'ABSENT'; }
+      }
     }
 
     const fallEl = document.getElementById('fall-alert');
     if (fallEl) fallEl.style.display = cls.fall_detected ? 'block' : 'none';
+
+    if (room) {
+      const el = document.getElementById('scenario-description');
+      if (el) el.textContent = room.label;
+      if (this._currentScenarioKey !== 'room-live') {
+        this._currentScenarioKey = 'room-live';
+        this._updateEdgeModules('empty_room');
+      }
+      return;
+    }
 
     // Scenario description and edge modules
     const scenarioKey = demoData._autoMode ? (demoData.currentScenario || 'auto') : (demoData.currentScenario || 'auto');
@@ -445,6 +485,20 @@ export class HudController {
       this._updateScenarioDescription(scenarioKey);
       this._updateEdgeModules(scenarioKey);
     }
+  }
+
+  _paintRoomMap(room) {
+    const person = document.getElementById('room-map-person');
+    const title = document.getElementById('room-map-title');
+    if (title) title.textContent = room.label || (room.present ? 'Standing' : 'Empty');
+    const near1 = room.present && room.t < 0.38;
+    const near2 = room.present && room.t > 0.62;
+    document.getElementById('room-sensor-1')?.classList.toggle('is-near', near1);
+    document.getElementById('room-sensor-2')?.classList.toggle('is-near', near2);
+    if (!person) return;
+    person.hidden = !room.present;
+    person.style.left = `${8 + room.t * 78}%`;
+    person.classList.toggle('is-walking', !!room.walking);
   }
 
   // ============================================================
